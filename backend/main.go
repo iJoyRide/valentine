@@ -1,66 +1,42 @@
 package main
 
 import (
+	"log"
 	"net/http"
 	"net/smtp"
 
 	"github.com/gin-gonic/gin"
 )
 
-// EmailRequest struct defines the JSON request body structure
-type EmailRequest struct {
-	Subject string   `json:"subject"`
-	Body    string   `json:"body"`
-	To      []string `json:"to"`
-}
+func sendMailSimple() {
+	// Set up your email details
+	from := "senderemail"
+	password := "password"
+	to := []string{"receiveremail"}
+	smtpHost := "smtp.gmail.com"
+	smtpPort := "587"
+	subject := "Will you be my Valentine?"
+	body := "I am so glad you accepted my invitation! Looking forward to our date."
+	message := []byte("Subject: " + subject + "\r\n\r\n" + body)
 
-// sendMailSimple sends an email using SMTP.
-func sendMailSimple(subject string, body string, to []string) error {
-	auth := smtp.PlainAuth(
-		"",
-		"joyride.projects@gmail.com", // Use your email
-		"lqbg uneu rmvr mvmu",        // Use your password
-		"smtp.gmail.com",
-	)
-
-	msg := []byte("Subject: " + subject + "\r\n" +
-		"\r\n" +
-		body + "\r\n")
-
-	err := smtp.SendMail(
-		"smtp.gmail.com:587",
-		auth,
-		"joyride.projects@gmail.com", // Use your email
-		to,
-		msg,
-	)
-
-	return err
+	auth := smtp.PlainAuth("", from, password, smtpHost)
+	err := smtp.SendMail(smtpHost+":"+smtpPort, auth, from, to, message)
+	if err != nil {
+		log.Fatalf("sendMailSimple failed: %s", err)
+	}
 }
 
 func main() {
-	router := gin.Default()
+	r := gin.Default()
+	r.Use(gin.Logger())
+	r.Use(gin.Recovery())
 
-	// Endpoint to send an email
-	router.POST("/send-email", func(c *gin.Context) {
-		var emailReq EmailRequest
-
-		// Bind the JSON to the struct
-		if err := c.ShouldBindJSON(&emailReq); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-
-		// Call the sendMailSimple function
-		err := sendMailSimple(emailReq.Subject, emailReq.Body, emailReq.To)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send email"})
-			return
-		}
-
+	// Setup route
+	r.POST("/send-valentine-email", func(c *gin.Context) {
+		sendMailSimple()
 		c.JSON(http.StatusOK, gin.H{"message": "Email sent successfully"})
 	})
 
 	// Run the server
-	router.Run(":8080")
+	r.Run(":8080")
 }

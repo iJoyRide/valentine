@@ -6,8 +6,29 @@ export default function Page() {
   const [yesPressed, setYesPressed] = useState(false);
   const yesButtonSize = noCount * 20 + 16;
 
+  const handleYesClick = async () => {
+    setYesPressed(true); // Update the state to reflect the button press
+  
+    try {
+      const response = await fetch('http://localhost:8080/send-valentine-email', {
+        method: 'POST', // Make sure to match the HTTP method expected by the backend
+      });
+  
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      
+      const data = await response.json();
+      console.log(data);
+      // Handle success here
+    } catch (error) {
+      console.error('Error sending email:', error);
+      // Handle errors here
+    }
+  };  
+
   const handleNoClick = () => {
-    setNoCount(noCount + 1);
+    setNoCount(noCount + 1); // Increment the noCount state
   };
 
   const getNoButtonText = () => {
@@ -45,13 +66,13 @@ export default function Page() {
           <img className="h-[200px]" src="https://gifdb.com/images/high/cute-love-bear-roses-ou7zho5oosxnpo6k.gif" />
           <h1 className="text-4xl my-4">Will you be my Valentine?</h1>
           <div>
-            <button
-              className={`bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mr-4`}
-              style={{ fontSize: yesButtonSize }}
-              onClick={() => setYesPressed(true)}
-            >
-              Yes
-            </button>
+          <button
+            className={`bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mr-4`}
+            style={{ fontSize: yesButtonSize }}
+            onClick={handleYesClick}
+          >
+            Yes
+          </button>
             <button
               onClick={handleNoClick}
               className=" bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
